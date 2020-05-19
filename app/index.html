@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <meta name="author" content="">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link href="css/normalize.css" rel="stylesheet">
+        <link href="css/style.css" rel="stylesheet">
+
+    </head>
+
+    <body>
+        <p>json upload</p>
+        <form action="http://10.0.0.194:8080/test" method="POST">
+            Key: <input type="text" name="key"><br>
+            Value: <input type="text" name="value"><br>
+            <button type="submit">Submit</button>
+        </form>
+        
+        <br>
+
+        <p>image upload</p>
+        <form action="http://10.0.0.194:8080/image" enctype="multipart/form-data" method="post">
+            <input type="file" name="upload" multiple>
+            <input type="submit" value="Upload">
+        </form>
+
+        <script>
+            const serverURL = "10.0.0.194";
+
+            let submit = document.getElementByID("submit");
+            let query = document.getElementByID("query");
+
+k
+            function sendFile() {
+                var data = new FormData();
+                data.append('file', input.files[0]);
+
+                fetch(serverURL, {
+                    method: 'post',
+                    body: data
+                }
+            }
+
+            submit.addEventListener("click", sendFile);
+        </script>
+    </body>
+
+
+</html>
