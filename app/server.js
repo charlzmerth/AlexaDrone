@@ -10,7 +10,7 @@ const readline = require('readline');
 app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const port = 8080;
+const port = process.env.PORT;
 
 //const mariadb = require('mariadb');
 //const pool = mariadb.createPool({
