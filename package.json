@@ -16,4 +16,7 @@
     "url": "https://github.com/charlzmerth/AlexaDrone/issues"
   },
   "homepage": "https://github.com/charlzmerth/AlexaDrone#readme"
+  "scripts": {
+    "start": "node server.js"
+  }
 }
