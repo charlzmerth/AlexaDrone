@@ -4,7 +4,7 @@
   "description": "EE 475 Capstone Repository",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node app/server.js"
   },
   "repository": {
     "type": "git",
