@@ -3,39 +3,82 @@ import requests
 import json
 import zipfile
 
-url = "http://10.0.0.194:8080/"
-basepath = os.path.dirname(os.path.realpath(__file__))
 
-def get_image(imgname):
-    query = {'img': imgname}
-    r = requests.get(url + "image", params=query)
+class AlexaRequest:
+    BASEPATH = os.path.dirname(os.path.realpath(__file__))
 
-    if r.status_code == 404:
-        post_image(basepath + imgname)
-    elif r.status_code == 200:
-        r.raw.decode_content = True
-        with open(imgname, 'wb') as f:
-            f.write(r.content)
-        with zipfile.ZipFile(imgname, 'r') as zip_ref:
-            zip_ref.extractall(basepath)
-    else:
-        raise RuntimeError()
+    def __init__(self, url):
+        self.url = url
 
-def post_image(imgname):
-    files = {imgname: open(basepath + '\\' + imgname, 'rb')}
-    r = requests.post(url, files=files)
+    def get_images(self, imgname):
+        query = { 'img': imgname }
+        r = requests.get(self.url + "image", params=query)
+        print(r)
 
-def get_strings(key):
-    query = {'key': key}
-    r = requests.get(url + "strings", params=query)
-    json = r.json()
-    return json["strings"]
+        if r.status_code == 404:
+            post_image(self.BASEPATH + imgname)
+        elif r.status_code == 200:
+            r.raw.decode_content = True
+            with open(imgname, 'wb') as f:
+                f.write(r.content)
+            with zipfile.ZipFile(imgname, 'r') as zip_ref:
+                zip_ref.extractall(self.BASEPATH)
+        else:
+            raise RuntimeError()
 
-def post_string(key, string):
-    data = {"key" : key, "string" : string}
-    requests.post(url + "strings", data)
+    def post_image(self, imagename, tag):
+        data = { 'tag': tag }
+        files = { 'image' : open(self.BASEPATH + '/' + imagename, 'rb') }
 
-if (__name__ == "main"):
-    post_string("sentences", "this is an example sentence")
-    post_string("sentences", "this is another example sentence")
-    get_strings("sentences")
+        r = requests.post(self.url + "image", files=files, data=data)
+        print(r)
+
+    def get_strings(self, key):
+        query = { 'key': key }
+        r = requests.get(self.url + "strings", params=query)
+        try:
+            json = r.json()
+            return json["strings"]
+        except:
+            if r.status_code == 404:
+                print("key not found")
+            else:
+                print("server error")
+
+    def del_strings(self, key):
+        query = { 'key' : key }
+        r = requests.delete(self.url + "strings", params=query)
+
+    def post_string(self, key, string):
+        data = { "key" : key, "string" : string }
+        requests.post(self.url + "strings", data)
+
+def string_test(ar):
+    # Send some example strings to server
+    ar.post_string("sentences", "this is an example sentence")
+    ar.post_string("sentences", "this is another example sentence")
+
+    # Retreive and print strings
+    strings = ar.get_strings("sentences")
+    print(strings)
+
+    # Delete the entries
+    ar.del_strings("sentences")
+    strings = ar.get_strings("sentences")
+    print(strings)
+
+def image_test(ar):
+    ar.post_image("graph.png", "math")
+    ar.get_images("math")
+
+if (__name__ == "__main__"):
+    print("running AlexaRequest example")
+
+    # Example server url
+    server_url = "http://10.0.0.194:5000/"
+
+    # Create request instance
+    ar = AlexaRequest(server_url)
+
+    #string_test(ar)
+    image_test(ar)
