@@ -53,6 +53,7 @@ class AlexaRequest:
         data = { "key" : key, "string" : string }
         requests.post(self.url + "strings", data)
 
+
 def string_test(ar):
     # Send some example strings to server
     ar.post_string("sentences", "this is an example sentence")
@@ -67,9 +68,11 @@ def string_test(ar):
     strings = ar.get_strings("sentences")
     print(strings)
 
+
 def image_test(ar):
     ar.post_image("graph.png", "math")
     ar.get_images("math")
+
 
 if (__name__ == "__main__"):
     print("running AlexaRequest example")
