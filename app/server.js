@@ -29,7 +29,6 @@ app.get('/', function(req, res){
 // Text post application
 app.post('/strings', (req, res) => {
     console.log("posting string");
-    console.log(req.body);
 
     res.send(`key:${req.body.key}, value: ${req.body.string}.`);
     console.log(`key: ${req.body.key}`);
@@ -42,21 +41,43 @@ app.post('/strings', (req, res) => {
     fs.appendFileSync(filePath, string + "\n");
 });
 
+app.delete('/strings', (req, res) => {
+    const key = req.query.key;
+    console.log(`requesting to delete "${key}"`);
+
+    try {
+        fs.unlinkSync(__dirname + '/strings/' + key);
+    } catch (err) {
+        res.status(404).send("error deleting " + key);
+    } finally {
+        res.send();
+    }
+});
+
 app.get('/strings', (req, res) => {
     const key = req.query.key;
     console.log(`requesting key ${key}`);
 
     const path = __dirname + "/strings/" + key;
+    try {
+        console.log("checking if file exists");
+        if (!fs.existsSync(path)) {
+            console.log("file doesn't exist");
+            return res.status(404).send("string query not found");
+        }
+    } catch(err) {
+        console.error(err)
+    }
 
     const readInterface = readline.createInterface({
-            input: fs.createReadStream(path),
-            output: process.stdout,
-            console: false
+        input: fs.createReadStream(path),
+        output: process.stdout,
+        console: false
     });
 
     var stringArray = [];
     readInterface.on('line', (line) => {
-          stringArray.push(line);
+        stringArray.push(line);
     }).on('close', () => {
         let data = { "strings" : stringArray };
         console.log(data);
@@ -72,21 +93,28 @@ app.post('/image', (req, res) => {
     const imageDirectory = __dirname + "/images/";
 
     form.parse(req, (err, fields, files) => {
-         res.json({ fields, files });
-    });
+        console.log(fields);
+        console.log(files);
 
-    // Add the image to local filesystem
-    form.on('fileBegin', (name, file) => {
-        const categoryDirectory = imageDirectory + path.parse(file.name).name + '/';
+        const tag = fields.tag;
+        const targetDirectory = imageDirectory + tag + '/';
         const imageId = shortid.generate();
-        const ext = path.extname(file.name);
+        const ext = path.extname(files.image.name);
+        const filePath = `${targetDirectory}/${imageId}${ext}`;
 
         // Create directory if non-existant
-        if (!fs.existsSync(categoryDirectory)) {
-            fs.mkdirSync(categoryDirectory);
+        if (!fs.existsSync(targetDirectory)) {
+            fs.mkdirSync(targetDirectory);
         }
 
-        file.path = `${categoryDirectory}/${imageId}.${ext}`;
+        try {
+            fs.renameSync(files.image.path, filePath);
+        } catch (err) {
+            console.log(err)
+            res.status(500).send();
+        } finally {
+            res.end();
+        }
     });
 
     // Display success message
@@ -98,19 +126,37 @@ app.post('/image', (req, res) => {
 // Send the requested (compressed) category of images, if they exist
 app.get('/image', (req, res) => {
     const category = path.parse(req.query.img).name;
+    const imageDirectory = __dirname + "/images/";
+    const targetDirectory = imageDirectory + category + '/';
+
     console.log(`requesting category ${category}`);
-    const tempZip = `${__dirname}/temp/${category}.zip`;
+    console.log('zipping files');
+
+    const tempZip = `/tmp/${category}.zip`;
 
     // Create compression stream
     let output = fs.createWriteStream(tempZip);
     let archive = archiver('zip', {
-          zlib: { level: 4 } // Sets the compression level.
+          zlib: { level: 9 } // Sets the compression level.
     });
 
     // Compress, send, delete
+    output.on('close', () => {
+        console.log('finished archiving');
+        res.sendFile(tempZip, () => {
+            fs.unlinkSync(tempZip);
+        });
+        console.log('sent file');
+    });
+
+    // Set archive target
     archive.pipe(output);
-    res.sendFile(tempZip);
-    fs.unlink(tempZip);
+
+    // Send target files
+    output.on('open', () => {
+        archive.directory(targetDirectory, false);
+        archive.finalize();
+    });
 });
 
 // Start the server
