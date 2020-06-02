@@ -1,0 +1,436 @@
+<html>
+   <head>
+      <title>AlexaDrone</title>
+      <meta name="viewport" content="width=device-width, user-scalable=no" />
+
+      <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+      <style>
+         @import url(https://fonts.googleapis.com/css?family=Lato:300);
+
+         html {
+           background: radial-gradient(#000, #111);
+           height: 100%;
+           text-align: center;
+         }
+
+         body {
+            position: relative;
+         }
+
+         .keys {
+           font-family: 'Lato', sans-serif;
+           text-align: center;
+           width: 100%;
+           height: 300px;
+           margin: auto;
+           padding-top: 10em;
+
+           -webkit-touch-callout: none; /* iOS Safari */
+             -webkit-user-select: none; /* Safari */
+              -khtml-user-select: none; /* Konqueror HTML */
+                -moz-user-select: none; /* Old versions of Firefox */
+                 -ms-user-select: none; /* Internet Explorer/Edge */
+                     user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+         }
+
+         .arr {
+           cursor: pointer;
+           width: 90px;
+           height: 90px;
+           text-align: center;
+           line-height: 50px;
+           background: grey;
+           color: white;
+           font-size: 50px;
+           border-right: 10px solid darken(grey, 20);
+           border-bottom: 10px solid darken(grey, 20);
+           border-left: 10px solid darken(grey, 15);
+           border-top: 10px solid darken(grey, 10);
+           display: inline-block;
+           margin: 5px;
+           transition: all .05s linear;
+           &:active {
+             border-bottom: 8px solid darken(grey, 20);
+             text-shadow: 0 0 10px white, 0 0 10px white, 0 0 20px white;
+             transform: translate(0, 2px);
+           }
+           user-select: none;
+         }
+
+         .up {
+           position: relative;
+           top: -4px;
+         }
+
+         .pressed {
+           border-bottom: 8px solid darken(grey, 20);
+           text-shadow: 0 0 10px white;
+           transform: translate(0, 2px);
+         }
+
+         .names {
+           font-size: 18px;
+           font-family: 'Lato', sans-serif;
+           text-align: center;
+           color: white;
+           text-shadow: 0 0 10px white, 0 0 10px white, 0 0 10px white, 0 0 10px white;
+         }
+
+         .b {
+           color: blue;
+           text-shadow: 0 0 10px blue, 0 0 10px blue, 0 0 10px blue, 0 0 10px blue;
+           font-size: 100px;
+           font-family: serif;
+         }
+
+         .a {
+           color: yellow;
+           text-shadow: 0 0 10px yellow, 0 0 10px yellow, 0 0 10px yellow, 0 0 10px yellow;
+           font-size: 100px;
+           font-family: serif;
+         }
+
+         #err-msg {
+            color: red;
+         }
+
+         header {
+            font-size: 3em;
+            text-align: center;
+         }
+
+         section {
+            margin: auto;
+         }
+
+         #comm-section {
+            width: 60%;
+            margin: auto;
+            display: flex;
+            flex-direction: row;
+         }
+
+         .ip-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+         }
+
+         .modal {
+            height: 15em;
+            width: 50em;
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+         }
+
+         /* Modal Header */
+         .modal-header {
+           padding: 2px 16px;
+           background-color: #5cb85c;
+           color: white;
+         }
+
+         /* Modal Body */
+         .modal-body {padding: 2px 16px;}
+
+         /* Modal Footer */
+         .modal-footer {
+           padding: 2px 16px;
+           background-color: #5cb85c;
+           color: white;
+         }
+
+         /* Modal Content */
+         .modal-content {
+           position: relative;
+           background-color: #fefefe;
+           margin: auto;
+           padding: 0;
+           border: 1px solid #888;
+           width: 30%;
+           text-align: center;
+           box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+           animation-name: animatetop;
+           animation-duration: 0.4s
+         }
+
+         .modal-content span {
+            text-align: left;
+         }
+
+         /* Add Animation */
+         @keyframes animatetop {
+           from {top: -300px; opacity: 0}
+           to {top: 0; opacity: 1}
+         }
+      </style>
+   </head>
+
+   <body>
+      <header>AlexaDrone</header>
+
+      <!-- The Modal -->
+      <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <p id='err-msg'></p>
+          <!-- <div class="ip-container">
+             <p style='padding-right: 10px;'>Enter AlexaDrone IP Address: </p>
+             <input id="ip-addr" type="text" name="ip-addr" value="">
+             <button id="ip-btn" type="button" name="button" onclick="logIP">enter</button>
+          </div> -->
+        </div>
+
+      </div>
+
+      <section id='comm-section'>
+          <input id='comm-input' type="text" name="command" value='enter command here'><br>
+          <button id='comm-btn' type="submit">send</button>
+      </section>
+      <section>
+         <div class="keys">
+           <div class="up arr"><i class="fa fa-arrow-up"></i></div>
+           <br />
+           <div class="left arr"><i class="fa fa-arrow-left"></i></div>
+           <div class="down arr"><i class="fa fa-arrow-down"></i></div>
+           <div class="right arr"><i class="fa fa-arrow-right"></i></div>
+         </div>
+         <br />
+         <br />
+         <br />
+         <br />
+         <div class="names">
+           <div class="uptext"></div>
+           <div class="downtext"></div>
+           <div class="lefttext"></div>
+           <div class="righttext"></div>
+           <div class="b"></div>
+           <div class="a"></div>
+         </div>
+
+         <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+         <script type="text/javascript"
+              src="https://code.jquery.com/jquery-3.5.1.slim.js"
+              integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM="
+              crossorigin="anonymous">
+         </script>
+
+         <script type="text/javascript">
+            // Get the modal
+            var modal = document.getElementById("myModal");
+
+            // Get the button that opens the modal
+            var btn = document.getElementById("myBtn");
+
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close")[0];
+
+            function closeModal() {
+               let modal = document.getElementById("myModal");
+               modal.style.display = "none";
+            }
+
+            function openModal() {
+               let modal = document.getElementById("myModal");
+               modal.style.display = "block";
+            }
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function() {
+              closeModal();
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+              if (event.target == modal) {
+                closeModal();
+              }
+            }
+
+            var url = "";
+
+            let ipBtn = document.getElementById('ip-btn');
+            //ipBtn.addEventListener('click', logIP);
+
+            let input = document.getElementById('ip-addr');
+            let command = document.getElementById('command');
+            url = window.location.href.split('/').slice(0, 3).join('/') + '/'
+
+            closeModal();
+            fetch(url)
+               .then(function(response) {
+               console.log(response.status);
+               if (response === null || !response.ok) {
+                  console.log("server error");
+                  openErrorBox();
+               }
+            });
+
+            function openErrorBox() {
+               let errMsg = document.getElementById('err-msg');
+               errMsg.textContent = "Error connecting to AlexaDrone. Please try again.";
+               errMsg.style.display = 'block';
+               openModal();
+            }
+
+            function closeErrorBox() {
+               let box = document.getElementById('myModal');
+               closeModal();
+            }
+
+            function startDirection(dir) {
+               fetch(url + "start/" + dir)
+                 .then(response => response.json())
+                 .then(data => console.log(data))
+                 .catch((err) => {
+                    console.log(err);
+                    openErrorBox();
+                 });
+            }
+
+            function stopDirection(dir) {
+               fetch(url + "stop/" + dir)
+                 .then(response => response.json())
+                 .then(data => console.log(data))
+                 .catch((err) => {
+                    console.log(err);
+                    openErrorBox();
+                 });
+            }
+
+            $(document).keydown(function(e) {
+              if (e.which==37) {
+                $('.left').addClass('pressed');
+                $('.lefttext').text('LEFT');
+                $('.left').css('transform', 'translate(0, 2px)');
+              } else if (e.which==38) {
+                $('.up').addClass('pressed');
+                $('.uptext').text('UP');
+                $('.left').css('transform', 'translate(0, 2px)');
+                $('.down').css('transform', 'translate(0, 2px)');
+                $('.right').css('transform', 'translate(0, 2px)');
+              } else if (e.which==39) {
+                $('.right').addClass('pressed');
+                $('.righttext').text('RIGHT');
+                $('.right').css('transform', 'translate(0, 2px)');
+              } else if (e.which==40) {
+                $('.down').addClass('pressed');
+                $('.downtext').text('DOWN');
+                $('.down').css('transform', 'translate(0, 2px)');
+              } else if (e.which==66) {
+                $('.b').text('B');
+              } else if (e.which==65) {
+                $('.a').text('A');
+              }
+            });
+
+            $(document).keyup(function(e) {
+              if (e.which==37) {
+                $('.left').removeClass('pressed');
+                $('.lefttext').text('');
+                $('.left').css('transform', 'translate(0, 0)');
+              } else if (e.which==38) {
+                $('.up').removeClass('pressed');
+                $('.uptext').text('');
+                $('.left').css('transform', 'translate(0, 0)');
+                $('.down').css('transform', 'translate(0, 0)');
+                $('.right').css('transform', 'translate(0, 0)');
+              } else if (e.which==39) {
+                $('.right').removeClass('pressed');
+                $('.righttext').text('');
+                $('.right').css('transform', 'translate(0, 0)');
+              } else if (e.which==40) {
+                $('.down').removeClass('pressed');
+                $('.downtext').text('');
+                $('.down').css('transform', 'translate(0, 0)');
+              } else if (e.which==66) {
+                $('.b').text('');
+              } else if (e.which==65) {
+                $('.a').text('');
+              }
+            });
+
+            $('input:text').focus(
+                function(){
+                    $(this).val('');
+             });
+
+            $('#comm-btn').mousedown(function() {
+               let commInput = document.getElementById('comm-input');
+               let command = commInput.value;
+
+               if (command === '') {
+                  return
+               }
+
+               fetch(url + "command/" + command)
+                 .then(response => response.json())
+                 .then(data => console.log(data))
+                 .then(function() {commInput.value = "";});
+               console.log();
+            });
+
+            $('.left').on('touchstart', function() {
+             $('.lefttext').text('LEFT');
+             $('.left').css('transform', 'translate(0, 2px)');
+             startDirection('left');
+            });
+
+            $('.left').on('touchend', function() {
+             $('.lefttext').text('');
+             $('.left').css('transform', 'translate(0, 0)');
+             stopDirection('left');
+            });
+
+            $('.right').on('touchstart', function() {
+             $('.righttext').text('RIGHT');
+             $('.right').css('transform', 'translate(0, 2px)');
+             startDirection('right');
+            });
+
+            $('.right').on('touchend', function() {
+             $('.righttext').text('');
+             $('.right').css('transform', 'translate(0, 0)');
+             stopDirection('right');
+            });
+
+            $('.up').on('touchstart', function() {
+             $('.uptext').text('UP');
+             $('.left').css('transform', 'translate(0, 2px)');
+             $('.down').css('transform', 'translate(0, 2px)');
+             $('.right').css('transform', 'translate(0, 2px)');
+             startDirection('forward');
+            });
+
+            $('.up').on('touchend', function() {
+             $('.uptext').text('');
+             $('.left').css('transform', 'translate(0, 0)');
+             $('.down').css('transform', 'translate(0, 0)');
+             $('.right').css('transform', 'translate(0, 0)');
+             stopDirection('forward');
+            });
+
+            $('.down').on('touchstart', function() {
+             $('.downtext').text('DOWN');
+             $('.down').css('transform', 'translate(0, 2px)');
+             startDirection('backward');
+            });
+
+            $('.down').on('touchend', function() {
+             $('.downtext').text('');
+             $('.down').css('transform', 'translate(0, 0)');
+             stopDirection('backward');
+            });
+
+         </script>
+      </section>
+   </body>
+</html>
