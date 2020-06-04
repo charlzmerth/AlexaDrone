@@ -98,6 +98,7 @@
          header {
             font-size: 3em;
             text-align: center;
+            margin-bottom: .5em;
          }
 
          section {
@@ -105,10 +106,22 @@
          }
 
          #comm-section {
-            width: 60%;
             margin: auto;
             display: flex;
             flex-direction: row;
+            margin-left: 4em;
+            margin-right: 4em;
+            align-items: center;
+            justify-content: center;
+         }
+
+         #comm-input {
+            width: 22em;
+         }
+
+         #voice {
+            height: 2em;
+            width: 1.6em;
          }
 
          .ip-container {
@@ -191,6 +204,7 @@
       </div>
 
       <section id='comm-section'>
+          <img id='voice' src="https://i.pinimg.com/originals/ef/8b/61/ef8b610043f14f2f7d812fb2c185beb3.png" alt="">
           <input id='comm-input' type="text" name="command" value='enter command here'><br>
           <button id='comm-btn' type="submit">send</button>
       </section>
@@ -221,42 +235,90 @@
               src="https://code.jquery.com/jquery-3.5.1.slim.js"
               integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM="
               crossorigin="anonymous">
+
          </script>
 
          <script type="text/javascript">
+               var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+
+               let recognition = null;
+               if (isChrome) {
+                  window.SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+                  recognition = new window.SpeechRecognition();
+                  recognition.interimResults = true;
+                  recognition.maxAlternatives = 10;
+                  recognition.continuous = true;
+               }
+
+               let listening = 0;
+               if ('SpeechRecognition' in window) {
+                  recognition.onresult = (event) => {
+                       let interimTranscript = '';
+                       let finalTranscript = '';
+                       for (let i = event.resultIndex, len = event.results.length; i < len; i++) {
+                           let transcript = event.results[i][0].transcript;
+                           if (event.results[i].isFinal) {
+                               finalTranscript += transcript;
+                           } else {
+                               interimTranscript += transcript;
+                           }
+                       }
+                       document.getElementById('comm-input').value = finalTranscript + interimTranscript;
+                   }
+               } else {
+                   document.getElementById('voice').style.display = 'none';
+               }
+
+               const voiceImg = document.getElementById('voice');
+               voice.addEventListener('click', function() {
+                   if (listening) {
+                       stopVoice();
+                   } else {
+                       startVoice();
+                   }
+               });
+
+               function startVoice() {
+                   document.getElementById('comm-input').value = '';
+                   voiceImg.style.border = '2px solid red';
+                   recognition.start();
+                   listening = 1;
+               }
+
+               function stopVoice() {
+                   voiceImg.style.border = 'none';
+                   recognition.stop();
+                   listening = 0;
+               }
+
             // Get the modal
             var modal = document.getElementById("myModal");
-
-            // Get the button that opens the modal
             var btn = document.getElementById("myBtn");
-
-            // Get the <span> element that closes the modal
             var span = document.getElementsByClassName("close")[0];
 
             function closeModal() {
-               let modal = document.getElementById("myModal");
-               modal.style.display = "none";
+                let modal = document.getElementById("myModal");
+                modal.style.display = "none";
             }
 
             function openModal() {
-               let modal = document.getElementById("myModal");
-               modal.style.display = "block";
+                let modal = document.getElementById("myModal");
+                modal.style.display = "block";
             }
 
             // When the user clicks on <span> (x), close the modal
             span.onclick = function() {
-              closeModal();
+                closeModal();
             }
 
             // When the user clicks anywhere outside of the modal, close it
             window.onclick = function(event) {
-              if (event.target == modal) {
-                closeModal();
-              }
+                if (event.target == modal) {
+                    closeModal();
+                }
             }
 
             var url = "";
-
             let ipBtn = document.getElementById('ip-btn');
             //ipBtn.addEventListener('click', logIP);
 
@@ -266,170 +328,203 @@
 
             closeModal();
             fetch(url)
-               .then(function(response) {
-               console.log(response.status);
-               if (response === null || !response.ok) {
-                  console.log("server error");
-                  openErrorBox();
-               }
-            });
+                .then(function(response) {
+                    console.log(response.status);
+                    if (response === null || !response.ok) {
+                        console.log("server error");
+                        openErrorBox();
+                    }
+                });
 
             function openErrorBox() {
-               let errMsg = document.getElementById('err-msg');
-               errMsg.textContent = "Error connecting to AlexaDrone. Please try again.";
-               errMsg.style.display = 'block';
-               openModal();
+                let errMsg = document.getElementById('err-msg');
+                errMsg.textContent = "Error connecting to AlexaDrone. Please try again.";
+                errMsg.style.display = 'block';
+                openModal();
             }
 
             function closeErrorBox() {
-               let box = document.getElementById('myModal');
-               closeModal();
+                let box = document.getElementById('myModal');
+                closeModal();
             }
 
             function startDirection(dir) {
-               fetch(url + "start/" + dir)
-                 .then(response => response.json())
-                 .then(data => console.log(data))
-                 .catch((err) => {
-                    console.log(err);
-                    openErrorBox();
-                 });
+                fetch(url + "start/" + dir)
+                    .then(response => response.json())
+                    .then(data => console.log(data))
+                    .catch((err) => {
+                        console.log(err);
+                        openErrorBox();
+                    });
             }
 
             function stopDirection(dir) {
-               fetch(url + "stop/" + dir)
-                 .then(response => response.json())
-                 .then(data => console.log(data))
-                 .catch((err) => {
-                    console.log(err);
-                    openErrorBox();
-                 });
+                fetch(url + "stop/" + dir)
+                    .then(response => response.json())
+                    .then(data => console.log(data))
+                    .catch((err) => {
+                        console.log(err);
+                        openErrorBox();
+                    });
             }
 
+            let LkeyDown = false;
+            let RkeyDown = false;
+            let UkeyDown = false;
+            let DkeyDown = false;
             $(document).keydown(function(e) {
-              if (e.which==37) {
-                $('.left').addClass('pressed');
+                if (e.which == 37 && !LkeyDown) {
+                    $('.left').addClass('pressed');
+                    $('.lefttext').text('LEFT');
+                    $('.left').css('transform', 'translate(0, 2px)');
+                    startDirection('left');
+                    LkeyDown = true;
+                } else if (e.which == 38 && !UkeyDown) {
+                    $('.up').addClass('pressed');
+                    $('.uptext').text('UP');
+                    $('.left').css('transform', 'translate(0, 2px)');
+                    $('.down').css('transform', 'translate(0, 2px)');
+                    $('.right').css('transform', 'translate(0, 2px)');
+                    startDirection('forward');
+                    UkeyDown = true;
+                } else if (e.which == 39 && !RkeyDown) {
+                    $('.right').addClass('pressed');
+                    $('.righttext').text('RIGHT');
+                    $('.right').css('transform', 'translate(0, 2px)');
+                    startDirection('right');
+                    RkeyDown = true;
+                } else if (e.which == 40 && !DkeyDown) {
+                    $('.down').addClass('pressed');
+                    $('.downtext').text('DOWN');
+                    $('.down').css('transform', 'translate(0, 2px)');
+                    startDirection('backward');
+                    DkeyDown = true;
+                } else if (e.which == 66) {
+                    $('.b').text('B');
+                } else if (e.which == 65) {
+                    $('.a').text('A');
+                }
+            });
+
+            $(document).keyup(function(e) {
+                if (e.which == 37 && LkeyDown) {
+                    $('.left').removeClass('pressed');
+                    $('.lefttext').text('');
+                    $('.left').css('transform', 'translate(0, 0)');
+                    stopDirection('left');
+                    LkeyDown = false;
+                } else if (e.which == 38 && UkeyDown) {
+                    $('.up').removeClass('pressed');
+                    $('.uptext').text('');
+                    $('.left').css('transform', 'translate(0, 0)');
+                    $('.down').css('transform', 'translate(0, 0)');
+                    $('.right').css('transform', 'translate(0, 0)');
+                    stopDirection('forward');
+                    UkeyDown = false;
+                } else if (e.which == 39 && RkeyDown) {
+                    $('.right').removeClass('pressed');
+                    $('.righttext').text('');
+                    $('.right').css('transform', 'translate(0, 0)');
+                    stopDirection('right');
+                    RkeyDown = false;
+                } else if (e.which == 40 && DkeyDown) {
+                    $('.down').removeClass('pressed');
+                    $('.downtext').text('');
+                    $('.down').css('transform', 'translate(0, 0)');
+                    stopDirection('backward');
+                    DkeyDown = false;
+                } else if (e.which == 66) {
+                    $('.b').text('');
+                } else if (e.which == 65) {
+                    $('.a').text('');
+                }
+            });
+
+            let deleted = false;
+            $('input:text').focus(
+                function() {
+                    if (!deleted) {
+                       $(this).val('');
+                       deleted = true;
+                    }
+                });
+
+            $('#comm-btn').mousedown(function() {
+                let commInput = document.getElementById('comm-input');
+                let command = commInput.value;
+
+                if (listening) {
+                    stopVoice();
+                }
+
+                if (command === '') {
+                    return;
+                }
+
+                fetch(url + "command/" + command)
+                    .then(response => response.json())
+                    .then(data => console.log(data))
+                    .then(function() {
+                        commInput.value = "";
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                        openErrorBox();
+                    });
+                console.log();
+            });
+
+            $('.left').on('touchstart', function() {
                 $('.lefttext').text('LEFT');
                 $('.left').css('transform', 'translate(0, 2px)');
-              } else if (e.which==38) {
-                $('.up').addClass('pressed');
+                startDirection('left');
+            });
+
+            $('.left').on('touchend', function() {
+                $('.lefttext').text('');
+                $('.left').css('transform', 'translate(0, 0)');
+                stopDirection('left');
+            });
+
+            $('.right').on('touchstart', function() {
+                $('.righttext').text('RIGHT');
+                $('.right').css('transform', 'translate(0, 2px)');
+                startDirection('right');
+            });
+
+            $('.right').on('touchend', function() {
+                $('.righttext').text('');
+                $('.right').css('transform', 'translate(0, 0)');
+                stopDirection('right');
+            });
+
+            $('.up').on('touchstart', function() {
                 $('.uptext').text('UP');
                 $('.left').css('transform', 'translate(0, 2px)');
                 $('.down').css('transform', 'translate(0, 2px)');
                 $('.right').css('transform', 'translate(0, 2px)');
-              } else if (e.which==39) {
-                $('.right').addClass('pressed');
-                $('.righttext').text('RIGHT');
-                $('.right').css('transform', 'translate(0, 2px)');
-              } else if (e.which==40) {
-                $('.down').addClass('pressed');
-                $('.downtext').text('DOWN');
-                $('.down').css('transform', 'translate(0, 2px)');
-              } else if (e.which==66) {
-                $('.b').text('B');
-              } else if (e.which==65) {
-                $('.a').text('A');
-              }
+                startDirection('forward');
             });
 
-            $(document).keyup(function(e) {
-              if (e.which==37) {
-                $('.left').removeClass('pressed');
-                $('.lefttext').text('');
-                $('.left').css('transform', 'translate(0, 0)');
-              } else if (e.which==38) {
-                $('.up').removeClass('pressed');
+            $('.up').on('touchend', function() {
                 $('.uptext').text('');
                 $('.left').css('transform', 'translate(0, 0)');
                 $('.down').css('transform', 'translate(0, 0)');
                 $('.right').css('transform', 'translate(0, 0)');
-              } else if (e.which==39) {
-                $('.right').removeClass('pressed');
-                $('.righttext').text('');
-                $('.right').css('transform', 'translate(0, 0)');
-              } else if (e.which==40) {
-                $('.down').removeClass('pressed');
-                $('.downtext').text('');
-                $('.down').css('transform', 'translate(0, 0)');
-              } else if (e.which==66) {
-                $('.b').text('');
-              } else if (e.which==65) {
-                $('.a').text('');
-              }
-            });
-
-            $('input:text').focus(
-                function(){
-                    $(this).val('');
-             });
-
-            $('#comm-btn').mousedown(function() {
-               let commInput = document.getElementById('comm-input');
-               let command = commInput.value;
-
-               if (command === '') {
-                  return
-               }
-
-               fetch(url + "command/" + command)
-                 .then(response => response.json())
-                 .then(data => console.log(data))
-                 .then(function() {commInput.value = "";});
-               console.log();
-            });
-
-            $('.left').on('touchstart', function() {
-             $('.lefttext').text('LEFT');
-             $('.left').css('transform', 'translate(0, 2px)');
-             startDirection('left');
-            });
-
-            $('.left').on('touchend', function() {
-             $('.lefttext').text('');
-             $('.left').css('transform', 'translate(0, 0)');
-             stopDirection('left');
-            });
-
-            $('.right').on('touchstart', function() {
-             $('.righttext').text('RIGHT');
-             $('.right').css('transform', 'translate(0, 2px)');
-             startDirection('right');
-            });
-
-            $('.right').on('touchend', function() {
-             $('.righttext').text('');
-             $('.right').css('transform', 'translate(0, 0)');
-             stopDirection('right');
-            });
-
-            $('.up').on('touchstart', function() {
-             $('.uptext').text('UP');
-             $('.left').css('transform', 'translate(0, 2px)');
-             $('.down').css('transform', 'translate(0, 2px)');
-             $('.right').css('transform', 'translate(0, 2px)');
-             startDirection('forward');
-            });
-
-            $('.up').on('touchend', function() {
-             $('.uptext').text('');
-             $('.left').css('transform', 'translate(0, 0)');
-             $('.down').css('transform', 'translate(0, 0)');
-             $('.right').css('transform', 'translate(0, 0)');
-             stopDirection('forward');
+                stopDirection('forward');
             });
 
             $('.down').on('touchstart', function() {
-             $('.downtext').text('DOWN');
-             $('.down').css('transform', 'translate(0, 2px)');
-             startDirection('backward');
+                $('.downtext').text('DOWN');
+                $('.down').css('transform', 'translate(0, 2px)');
+                startDirection('backward');
             });
 
             $('.down').on('touchend', function() {
-             $('.downtext').text('');
-             $('.down').css('transform', 'translate(0, 0)');
-             stopDirection('backward');
+                $('.downtext').text('');
+                $('.down').css('transform', 'translate(0, 0)');
+                stopDirection('backward');
             });
-
          </script>
       </section>
    </body>
